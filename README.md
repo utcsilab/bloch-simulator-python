@@ -5,6 +5,8 @@ The original bloch equation simulator was a Matlab mex file created by Brian Har
 We used the simulator in a graduate MRI class taught by Miki Lustig; Lustig wrote several helper modules in matlab, which I've also converted to Python.
 This module current uses python3. I developed this on a Linux machine and others have told me it works on Mac. It is untested on Windows.
 
+- Modfied by Jon Tamir, Spring 2020
+
 Dependencies
 ======================
 python 3.7
