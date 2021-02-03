@@ -18,6 +18,10 @@ Installation
 ======================
 Simply run "python setup.py install" to install the simulator. Then "from bloch import bloch" for the primary bloch simulator function. Numpy needs to be installed for the setup file to run. As this is a compiled c extension, you will need to make sure your build environment can build python c extensions.
 
+Test
+======================
+Run `python -m unittest` from the base directory
+
 License
 ======================
 This library is distributed under the same terms as Brian's original bloch simulator

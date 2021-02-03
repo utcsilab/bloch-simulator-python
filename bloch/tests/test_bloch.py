@@ -6,7 +6,7 @@ import scipy.io as sio
 
 from bloch.bloch import bloch
 
-TEST_DIR = "test_data"
+TEST_DIR = "bloch/tests/test_data"
 
 class BlochTest(unittest.TestCase):
     """

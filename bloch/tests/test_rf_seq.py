@@ -6,9 +6,9 @@ import scipy as sp
 from bloch.bloch import bloch
 from bloch.rf_seq import hard_pulses, sinc_pulse
 
-from BlochTest import get_data_with_key
+from bloch.tests.test_bloch import get_data_with_key
 
-TEST_DIR = "test_data"
+TEST_DIR = "bloch/tests/test_data"
 
 class RFSeqTests(unittest.TestCase):
     """

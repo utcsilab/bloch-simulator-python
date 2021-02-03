@@ -8,9 +8,9 @@ import scipy.io as sio
 
 from bloch.min_time_gradient import minimum_time_gradient
 
-from BlochTest import get_data_with_key
+from bloch.tests.test_bloch import get_data_with_key
 
-TEST_DIR = "test_data"
+TEST_DIR = "bloch/tests/test_data"
 TEST_FILE = "gradient"
 
 class GradientAreaTest(unittest.TestCase):

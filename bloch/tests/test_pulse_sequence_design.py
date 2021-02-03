@@ -6,9 +6,9 @@ import scipy.io as sio
 
 from bloch.pulse_seq_design import generate_readout_gradient, generate_phase_encode_gradient
 
-from BlochTest import get_data_with_key
+from bloch.tests.test_bloch import get_data_with_key
 
-TEST_DIR = "test_data" 
+TEST_DIR = "bloch/tests/test_data"
 TEST_FILE = "pulse"
 
 g_max = 4
