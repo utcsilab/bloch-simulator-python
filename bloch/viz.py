@@ -40,11 +40,18 @@ def _arrow3D(ax, x, y, z, dx, dy, dz, *args, **kwargs):
 setattr(Axes3D,'arrow3D',_arrow3D) # this line should not be indented
 
 
-def visualize_magnetization(RF, B0, mx, my, mz, plot_sum=False, accel=1, fig=None):
+def visualize_magnetization(RF, B0, mx, my, mz, accel=1, plot_sum=False, fig=None):
     '''Visualizes the magnetization of a given B1, B0, and magnetization vector
     
     Args:
-        RF (np.array): B1 field (real is y axis, imag is x axis)
+        RF (np.array): B1 field (real is x axis, imag is y axis)
+        B0 (np.array): B0 field
+        mx (np.array): MxN Transverse Mx component for M spins at N time points
+        my (np.array): MxN Transverse My component for M spins at N time points
+        mz (np.array): MxN Longitudinal Mz component for M spins at N time points
+        accel (int): plot acceleration. Default: 1  
+        plot_sum (bool): True to also plot the net magnetization across the M spins
+        fig (plt.figure): existing figure object
     '''
 
     if len(mx.shape) == 1:
@@ -63,6 +70,11 @@ def visualize_magnetization(RF, B0, mx, my, mz, plot_sum=False, accel=1, fig=Non
     if type(accel) == type(1):
         accel = [[0, accel]]            
     accel = accel + [[np.shape(mx)[1], accel[-1][1]]]
+
+    if RF is None:
+        RF = np.zeros((mx.shape[1],), dtype=np.complex)
+    if B0 is None:
+        B0 = np.zeros((mx.shape[1],))
 
     sc = 1/0.85
     x0 = -sc * np.eye(3)
@@ -90,7 +102,7 @@ def visualize_magnetization(RF, B0, mx, my, mz, plot_sum=False, accel=1, fig=Non
             if i > 0:
                 ax.artists.pop(0)
             ax.arrow3D(0, 0, 0,
-                   np.real(RF[i]), np.imag(RF[i]), 0,
+                   np.real(RF[i]), -np.imag(RF[i]), 0,
                    mutation_scale=30,
                    ec ='k',
                    fc=ARROW_COLORS[0])
