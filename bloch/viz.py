@@ -101,16 +101,16 @@ def visualize_magnetization(RF, B0, mx, my, mz, accel=1, plot_sum=False, fig=Non
 
             if i > 0:
                 ax.artists.pop(0)
-            ax.arrow3D(0, 0, 0,
-                   np.real(RF[i]), -np.imag(RF[i]), 0,
+            ax.arrow3D(0., 0., 0.,
+                   float(np.real(RF[i])), float(-np.imag(RF[i])), 0.,
                    mutation_scale=30,
                    ec ='k',
                    fc=ARROW_COLORS[0])
 
             if i > 0:
                 ax.artists.pop(0)
-            ax.arrow3D(0, 0, 0,
-                   0, 0, B0[i],
+            ax.arrow3D(0., 0., 0.,
+                   0., 0., float(B0[i]),
                    mutation_scale=30,
                    ec ='k',
                    fc=ARROW_COLORS[1])
@@ -118,8 +118,8 @@ def visualize_magnetization(RF, B0, mx, my, mz, accel=1, plot_sum=False, fig=Non
             for k in range(len(mx)):
                 if i > 0:
                     ax.artists.pop(0)
-                ax.arrow3D(0, 0, 0,
-                       mx[k,i], my[k,i], mz[k,i],
+                ax.arrow3D(0., 0., 0.,
+                       float(mx[k,i]), float(my[k,i]), float(mz[k,i]),
                        mutation_scale=30,
                        ec=ARROW_COLORS[(k+2) %len(ARROW_COLORS)],
                        fc=ARROW_COLORS[(k+2) %len(ARROW_COLORS)],
