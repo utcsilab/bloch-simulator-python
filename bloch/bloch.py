@@ -43,7 +43,20 @@ def bloch(b1, gr, tp, t1, t2, df, dp, mode, mx=None, my=None, mz=None):
     """
     if isinstance(b1, NUMBER):
         b1 = np.ones(1) * b1
-    ntime = b1.size
+    if b1.ndim == 1:
+        b1 = np.expand_dims(b1, 0)
+    ntime = b1.size[1]
+
+    assert gr.ndim == 2 and gr.shape[0] <= 3 and gr.shape[1] == ntime, 'gr is of the wrong shape.'
+
+    tp_flag = False
+    tp_flag |= isinstance(tp, NUMBER)
+    tp_flag |= (tp.ndim == 1)
+    if tp.ndim == 2:
+        tp_flag |= (tp.shape[0] == 1) and ((tp.shape[1] == 1) or (tp.shape[1] == ntime))
+    else:
+        tp_flag |= False
+    assert tp_flag, 'tp is of the wrong shape.'
 
     grx, gry, grz = process_gradient_argument(gr, ntime)
     tp = process_time_points(tp, ntime)
