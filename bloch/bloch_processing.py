@@ -1,6 +1,8 @@
 import numpy as np
 import scipy as sp
 
+import warnings
+
 NUMBER = (int, float, complex)
 
 #Functions to handle preprocessing for bloch simulator arguments.
@@ -27,6 +29,8 @@ def process_gradient_argument(gr, points):
     if isinstance(gr, NUMBER):
         return gr * np.ones(points), np.zeros(points), np.zeros(points)
     elif 1 == gr.ndim:
+        if gr.shape[0] <= 3:
+            warnings.warn("A 1-dim gradient array of size <= 3 is ambiguous. The array will be treated as a 1x{} array".format(gr.shape[0]))
         return gr, np.zeros(points), np.zeros(points)
 
     assert 2 == gr.ndim, 'Gradient argument must be a scalar or a numpy array having 1 or 2 dimensions'
