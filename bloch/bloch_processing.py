@@ -5,6 +5,19 @@ NUMBER = (int, float, complex)
 
 #Functions to handle preprocessing for bloch simulator arguments.
 
+def process_rf_argument(b1):
+    """
+    Checks the shape of the RF argument and promotes if needed.
+    """
+    if isinstance(b1, NUMBER):
+        b1 = np.ones(1) * b1
+
+    if b1.ndim == 1:
+        b1 = np.expand_dims(b1, 0)
+
+    assert b1.ndim == 2 and b1.shape[0] == 1, 'b1 is of the wrong shape.'
+    return b1, b1.shape[1]
+
 def process_gradient_argument(gr, points):
     """
     Takes in a gradient argument and returns directional gradients.
@@ -13,10 +26,16 @@ def process_gradient_argument(gr, points):
     """
     if isinstance(gr, NUMBER):
         return gr * np.ones(points), np.zeros(points), np.zeros(points)
-    elif 1 == len(gr.shape):
+    elif 1 == gr.ndim:
         return gr, np.zeros(points), np.zeros(points)
 
+    assert 2 == gr.ndim, 'Gradient argument must be a scalar or a numpy array having 1 or 2 dimensions'
+
+    if gr.shape[1] != points:
+        raise IndexError("Gradient length is not equal to RF length")
+
     gradient_dimensions = gr.shape[0]
+    assert gradient_dimensions <= 3, 'Axis 0 of the gradient array must be of size <= 3'
 
     if 3 == gradient_dimensions:
         return gr[0,:], gr[1,:], gr[2,:]
@@ -36,7 +55,13 @@ def process_time_points(tp, points):
     """
     if isinstance(tp, NUMBER):
         return tp * np.ones(points)
-    elif points != tp.size:
+
+    if tp.ndim == 2:
+        assert tp.shape[0] == 1, 'Axis 0 of the array of time points must be of size 1'
+    else:
+        assert tp.ndim <= 2, 'The array of time points may have at most 2 dimensions'
+
+    if points != tp.shape[-1]:
         raise IndexError("time point length is not equal to rf length")
     else:
         ti = np.zeros(points)
