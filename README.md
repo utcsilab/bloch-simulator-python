@@ -1,6 +1,8 @@
 bloch-simulator-python
 ======================
 
+![example workflow](https://github.com/utcsilab/bloch-simulator-python/actions/workflows/python-package.yml/badge.svg)
+
 The original bloch equation simulator was a Matlab mex file created by Brian Hargreaves at Stanford University. This is a modification to run it as a Python C extension
 We used the simulator in a graduate MRI class taught by Miki Lustig; Lustig wrote several helper modules in matlab, which I've also converted to Python.
 This module current uses python3. I developed this on a Linux machine and others have told me it works on Mac. It is untested on Windows.
@@ -28,4 +30,4 @@ License
 ======================
 This library is distributed under the same terms as Brian's original bloch simulator
 
-Thank you to Brian for the original bloch simulator, Mikki Lustig for the code for the helper modules, and NPann for assisting me with a critical bug fix.
+Thank you to Brian for the original bloch simulator, Miki Lustig for the code for the helper modules, and NPann for assisting me with a critical bug fix.
