@@ -4,7 +4,7 @@ import scipy as sp
 from bloch.bloch_simulator import bloch_c
 
 from bloch.bloch_processing import NUMBER
-from bloch.bloch_processing import process_gradient_argument, process_time_points, process_off_resonance_arguments
+from bloch.bloch_processing import process_rf_argument, process_gradient_argument, process_time_points, process_off_resonance_arguments
 from bloch.bloch_processing import process_positions, process_magnetization, reshape_matrices
 from bloch.bloch_processing import process_relaxations
 
@@ -41,10 +41,7 @@ def bloch(b1, gr, tp, t1, t2, df, dp, mode, mx=None, my=None, mz=None):
             mx,my,mz = NxP arrays of the resulting magnetization
                             components at each position and frequency.
     """
-    if isinstance(b1, NUMBER):
-        b1 = np.ones(1) * b1
-    ntime = b1.size
-
+    b1, ntime = process_rf_argument(b1)
     grx, gry, grz = process_gradient_argument(gr, ntime)
     tp = process_time_points(tp, ntime)
     df, nf = process_off_resonance_arguments(df)
