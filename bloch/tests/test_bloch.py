@@ -4,7 +4,7 @@ import unittest
 import numpy as np
 import scipy.io as sio
 
-from bloch.bloch import bloch
+from bloch import bloch
 
 TEST_DIR = "bloch/tests/test_data"
 
