@@ -3,7 +3,7 @@ import unittest
 import numpy as np
 import scipy as sp
 
-from bloch.bloch import bloch
+from bloch import bloch
 from bloch.rf_seq import hard_pulses, sinc_pulse
 
 from bloch.tests.test_bloch import get_data_with_key
