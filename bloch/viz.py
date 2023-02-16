@@ -18,26 +18,36 @@ ARROW_COLORS = list(mcolors.TABLEAU_COLORS.keys())
 # based on https://gist.github.com/WetHat/1d6cd0f7309535311a539b42cccca89c
 class Arrow3D(FancyArrowPatch):
     def __init__(self, x, y, z, dx, dy, dz, *args, **kwargs):
-        super().__init__((0,0), (0,0), *args, **kwargs)
-        self._xyz = (x,y,z)
-        self._dxdydz = (dx,dy,dz)
+        super().__init__((0, 0), (0, 0), *args, **kwargs)
+        self._xyz = (x, y, z)
+        self._dxdydz = (dx, dy, dz)
 
     def draw(self, renderer):
-        x1,y1,z1 = self._xyz
-        dx,dy,dz = self._dxdydz
-        x2,y2,z2 = (x1+dx,y1+dy,z1+dz)
+        x1, y1, z1 = self._xyz
+        dx, dy, dz = self._dxdydz
+        x2, y2, z2 = (x1 + dx, y1 + dy, z1 + dz)
 
-        xs, ys, zs = proj_transform((x1,x2),(y1,y2),(z1,z2), renderer.M)
-        self.set_positions((xs[0],ys[0]),(xs[1],ys[1]))
+        xs, ys, zs = proj_transform((x1, x2), (y1, y2), (z1, z2), self.axes.M)
+        self.set_positions((xs[0], ys[0]), (xs[1], ys[1]))
         super().draw(renderer)
         
+    def do_3d_projection(self, renderer=None):
+        x1, y1, z1 = self._xyz
+        dx, dy, dz = self._dxdydz
+        x2, y2, z2 = (x1 + dx, y1 + dy, z1 + dz)
+
+        xs, ys, zs = proj_transform((x1, x2), (y1, y2), (z1, z2), self.axes.M)
+        self.set_positions((xs[0], ys[0]), (xs[1], ys[1]))
+
+        return np.min(zs) 
+
 def _arrow3D(ax, x, y, z, dx, dy, dz, *args, **kwargs):
     '''Add a 3d arrow to an `Axes3D` instance.'''
 
     arrow = Arrow3D(x, y, z, dx, dy, dz, *args, **kwargs)
-    ax.add_artist(arrow)
+    ax.add_patch(arrow)
 
-setattr(Axes3D,'arrow3D',_arrow3D) # this line should not be indented
+setattr(Axes3D, 'arrow3D', _arrow3D) # this line should not be indented
 
 
 def visualize_magnetization(RF, B0, mx, my, mz, accel=1, plot_sum=False, fig=None):
@@ -100,7 +110,8 @@ def visualize_magnetization(RF, B0, mx, my, mz, accel=1, plot_sum=False, fig=Non
         for i in range(acc_start, acc_end, acc):  
 
             if i > 0:
-                ax.artists.pop(0)
+                ax.patches[0].remove()
+
             ax.arrow3D(0., 0., 0.,
                    float(np.real(RF[i])), float(-np.imag(RF[i])), 0.,
                    mutation_scale=30,
@@ -108,7 +119,8 @@ def visualize_magnetization(RF, B0, mx, my, mz, accel=1, plot_sum=False, fig=Non
                    fc=ARROW_COLORS[0])
 
             if i > 0:
-                ax.artists.pop(0)
+                ax.patches[0].remove()
+
             ax.arrow3D(0., 0., 0.,
                    0., 0., float(B0[i]),
                    mutation_scale=30,
@@ -117,15 +129,18 @@ def visualize_magnetization(RF, B0, mx, my, mz, accel=1, plot_sum=False, fig=Non
             
             for k in range(len(mx)):
                 if i > 0:
-                    ax.artists.pop(0)
+                    ax.patches[0].remove()
+
                 ax.arrow3D(0., 0., 0.,
                        float(mx[k,i]), float(my[k,i]), float(mz[k,i]),
                        mutation_scale=30,
                        ec=ARROW_COLORS[(k+2) %len(ARROW_COLORS)],
                        fc=ARROW_COLORS[(k+2) %len(ARROW_COLORS)],
                           alpha=.6)
+
                 if i > 0:
-                    ax.lines.pop(3)
+                    ax.lines[3].remove()
+
                 lines = ax.plot(mx[k,:i], my[k,:i], mz[k,:i], linestyle='--', color=ARROW_COLORS[(k+2) %len(ARROW_COLORS)])
             fig.canvas.draw()
 
