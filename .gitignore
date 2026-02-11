@@ -1,4 +1,7 @@
-__pycache__
-*.sw*
-build
+build/
+dist/
+*.egg-info/
+__pycache__/
+*.pyc
 *.so
+*.o

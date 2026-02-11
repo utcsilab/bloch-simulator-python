@@ -44,12 +44,8 @@ def sinc_pulse(timebandwidth, flip_angle, duration, dt, gamma=26747.52):
     """
     samples = int(duration / dt)
     theta = np.linspace(-timebandwidth/2, timebandwidth/2, samples+2)
-    #### Original Code: wrong RF Pulse ####
-    # rf = np.sinc(theta[1:-1] * sig.hann(samples))
-    # rf = flip_angle * (rf/np.sum(rf))
-    # rf /= (gamma * dt)
-    ##### Sep.11.2019 by Zhenliang Lin ####
     rf = np.sinc(theta[1:-1])
-    rf = flip_angle * (rf / np.sum(rf)) * sig.hann(samples)
+    rf = rf * sig.windows.hann(samples, sym=True)
+    rf = flip_angle * (rf / np.sum(rf))
     rf /= (gamma * dt)
     return rf
