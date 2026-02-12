@@ -1,0 +1,8 @@
+[flake8]
+exclude =
+  build,
+  dist,
+  .eggs,
+  *.egg-info,
+  __pycache__
+max-line-length = 127

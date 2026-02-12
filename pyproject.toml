@@ -20,3 +20,7 @@ dependencies = [
 [project.urls]
 Homepage = "https://github.com/utcsilab/bloch-simulator-python"
 
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["bloch*"]
