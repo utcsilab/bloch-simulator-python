@@ -1,1 +1,1 @@
-from bloch.bloch import bloch
+from .bloch import bloch
