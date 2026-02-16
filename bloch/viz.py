@@ -1,21 +1,20 @@
 #!/usr/bin/env python
-
-# bloch visualization 
-# based on Matlab code from Miki Lustig
-# Jon Tamir, 2020
-
 import numpy as np
-
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d.proj3d import proj_transform
 from mpl_toolkits.mplot3d.axes3d import Axes3D
 from matplotlib.patches import FancyArrowPatch
 import matplotlib.colors as mcolors
+from matplotlib import animation
+from IPython.display import HTML
+
+
+
+
 
 ARROW_COLORS = list(mcolors.TABLEAU_COLORS.keys())
 
 
-# based on https://gist.github.com/WetHat/1d6cd0f7309535311a539b42cccca89c
 class Arrow3D(FancyArrowPatch):
     def __init__(self, x, y, z, dx, dy, dz, *args, **kwargs):
         super().__init__((0, 0), (0, 0), *args, **kwargs)
@@ -26,128 +25,177 @@ class Arrow3D(FancyArrowPatch):
         x1, y1, z1 = self._xyz
         dx, dy, dz = self._dxdydz
         x2, y2, z2 = (x1 + dx, y1 + dy, z1 + dz)
-
         xs, ys, zs = proj_transform((x1, x2), (y1, y2), (z1, z2), self.axes.M)
         self.set_positions((xs[0], ys[0]), (xs[1], ys[1]))
         super().draw(renderer)
-        
+
     def do_3d_projection(self, renderer=None):
         x1, y1, z1 = self._xyz
         dx, dy, dz = self._dxdydz
         x2, y2, z2 = (x1 + dx, y1 + dy, z1 + dz)
-
         xs, ys, zs = proj_transform((x1, x2), (y1, y2), (z1, z2), self.axes.M)
         self.set_positions((xs[0], ys[0]), (xs[1], ys[1]))
+        return np.min(zs)
 
-        return np.min(zs) 
 
 def _arrow3D(ax, x, y, z, dx, dy, dz, *args, **kwargs):
-    '''Add a 3d arrow to an `Axes3D` instance.'''
-
     arrow = Arrow3D(x, y, z, dx, dy, dz, *args, **kwargs)
     ax.add_patch(arrow)
+    return arrow
 
-setattr(Axes3D, 'arrow3D', _arrow3D) # this line should not be indented
+
+setattr(Axes3D, "arrow3D", _arrow3D)
 
 
-def visualize_magnetization(RF, B0, mx, my, mz, accel=1, plot_sum=False, fig=None):
-    '''Visualizes the magnetization of a given B1, B0, and magnetization vector
-    
-    Args:
-        RF (np.array): B1 field (real is x axis, imag is y axis)
-        B0 (np.array): B0 field
-        mx (np.array): MxN Transverse Mx component for M spins at N time points
-        my (np.array): MxN Transverse My component for M spins at N time points
-        mz (np.array): MxN Longitudinal Mz component for M spins at N time points
-        accel (int): plot acceleration. Default: 1  
-        plot_sum (bool): True to also plot the net magnetization across the M spins
-        fig (plt.figure): existing figure object
-    '''
+def visualize_magnetization_anim(
+    RF,
+    B0,
+    mx,
+    my,
+    mz,
+    accel=1,
+    plot_sum=False,
+    fig=None,
+    in_notebook=False,
+    interval_ms=20,
+    notebook_mode="jshtml",   # "jshtml" or "html5"
+):
+    """
+    Returns:
+      - if in_notebook=False: (fig, ax, ani)
+      - if in_notebook=True:  (fig, ax, ani, html) where html is display-ready (HTML object)
+
+    Notes:
+      - In notebooks, you must keep a reference to `ani` (e.g., store in a list),
+        otherwise it may be garbage-collected and stop rendering.
+      - For 3D artists, blit=False is correct.
+    """
 
     if len(mx.shape) == 1:
-        mx = mx[None,:]
-        my = my[None,:]
-        mz = mz[None,:]
-        
+        mx = mx[None, :]
+        my = my[None, :]
+        mz = mz[None, :]
+
     if plot_sum:
         mx = np.vstack((mx, np.sum(mx, 0)))
         my = np.vstack((my, np.sum(my, 0)))
         mz = np.vstack((mz, np.sum(mz, 0)))
 
-    if fig is None:
-        fig = plt.figure(figsize=(8,8))
-        
-    if type(accel) == type(1):
-        accel = [[0, accel]]            
-    accel = accel + [[np.shape(mx)[1], accel[-1][1]]]
+    T = mx.shape[1]
 
     if RF is None:
-        RF = np.zeros((mx.shape[1],), dtype=np.complex)
+        RF = np.zeros((T,), dtype=complex)
     if B0 is None:
-        B0 = np.zeros((mx.shape[1],))
+        B0 = np.zeros((T,))
 
-    sc = 1/0.85
+    if fig is None:
+        fig = plt.figure(figsize=(8, 8))
+    fig.clf()
+    ax = fig.add_subplot(111, projection="3d")
+
+    sc = 1 / 0.85
     x0 = -sc * np.eye(3)
     x1 = sc * np.eye(3)
 
-    ax = fig.add_subplot(111, projection='3d')
-
     for i in range(3):
-        ax.plot([x0[i, 0], x1[i, 0]], [x0[i, 1], x1[i, 1]], [x0[i,2], x1[i,2]], 'gray')
-    ax.set_xlim(-1,1)
-    ax.set_ylim(-1,1)
-    ax.set_zlim(-1,1)
-    ax.axis('off')
+        ax.plot(
+            [x0[i, 0], x1[i, 0]],
+            [x0[i, 1], x1[i, 1]],
+            [x0[i, 2], x1[i, 2]],
+            "gray",
+        )
 
-    fig.show()
-    fig.canvas.draw()
-    ax.view_init(elev=30., azim=60)
-    
-    for j in range(len(accel)-1):
-        acc_start = accel[j][0]
-        acc_end = accel[j+1][0]
-        acc = accel[j][1]
-        for i in range(acc_start, acc_end, acc):  
+    ax.set_xlim(-1, 1)
+    ax.set_ylim(-1, 1)
+    ax.set_zlim(-1, 1)
+    ax.axis("off")
+    ax.view_init(elev=30.0, azim=60)
 
-            if i > 0:
-                ax.patches[0].remove()
+    if isinstance(accel, int):
+        accel = [[0, accel]]
+    accel = accel + [[T, accel[-1][1]]]
 
-            ax.arrow3D(0., 0., 0.,
-                   float(np.real(RF[i])), float(-np.imag(RF[i])), 0.,
-                   mutation_scale=30,
-                   ec ='k',
-                   fc=ARROW_COLORS[0])
+    frames = []
+    for j in range(len(accel) - 1):
+        start = int(accel[j][0])
+        end = int(accel[j + 1][0])
+        step = int(accel[j][1])
+        frames.extend(range(start, end, step))
 
-            if i > 0:
-                ax.patches[0].remove()
+    rf_arrow = ax.arrow3D(0, 0, 0, 0, 0, 0, mutation_scale=30, ec="k", fc=ARROW_COLORS[0])
+    b0_arrow = ax.arrow3D(0, 0, 0, 0, 0, 0, mutation_scale=30, ec="k", fc=ARROW_COLORS[1])
 
-            ax.arrow3D(0., 0., 0.,
-                   0., 0., float(B0[i]),
-                   mutation_scale=30,
-                   ec ='k',
-                   fc=ARROW_COLORS[1])
-            
-            for k in range(len(mx)):
-                if i > 0:
-                    ax.patches[0].remove()
+    m_arrows = []
+    trail_lines = []
+    for k in range(mx.shape[0]):
+        col = ARROW_COLORS[(k + 2) % len(ARROW_COLORS)]
+        a = ax.arrow3D(
+            0, 0, 0, 0, 0, 0,
+            mutation_scale=20,
+            ec=col, fc=col, alpha=0.6
+        )
+        m_arrows.append(a)
 
-                ax.arrow3D(0., 0., 0.,
-                       float(mx[k,i]), float(my[k,i]), float(mz[k,i]),
-                       mutation_scale=30,
-                       ec=ARROW_COLORS[(k+2) %len(ARROW_COLORS)],
-                       fc=ARROW_COLORS[(k+2) %len(ARROW_COLORS)],
-                          alpha=.6)
+        (ln,) = ax.plot([mx[k, 0]], [my[k, 0]], [mz[k, 0]],
+                        linestyle="--", color=col)
+        trail_lines.append(ln)
 
-                if i > 0:
-                    ax.lines[3].remove()
+    def init():
+        rf_arrow._xyz = (0, 0, 0); rf_arrow._dxdydz = (0, 0, 0)
+        b0_arrow._xyz = (0, 0, 0); b0_arrow._dxdydz = (0, 0, 0)
 
-                lines = ax.plot(mx[k,:i], my[k,:i], mz[k,:i], linestyle='--', color=ARROW_COLORS[(k+2) %len(ARROW_COLORS)])
-            fig.canvas.draw()
+        for k in range(mx.shape[0]):
+            m_arrows[k]._xyz = (0, 0, 0)
+            m_arrows[k]._dxdydz = (0, 0, 0)
+            trail_lines[k].set_data([mx[k, 0]], [my[k, 0]])
+            trail_lines[k].set_3d_properties([mz[k, 0]])
+
+        return [rf_arrow, b0_arrow] + m_arrows + trail_lines
+
+    def update(f):
+        # RF arrow
+        rf_arrow._xyz = (0, 0, 0)
+        rf_arrow._dxdydz = (float(np.real(RF[f])), float(-np.imag(RF[f])), 0.0)
+
+        # B0 arrow
+        b0_arrow._xyz = (0, 0, 0)
+        b0_arrow._dxdydz = (0.0, 0.0, float(B0[f]))
+
+        # magnetization arrows & trails
+        for k in range(mx.shape[0]):
+            m_arrows[k]._xyz = (0, 0, 0)
+            m_arrows[k]._dxdydz = (float(mx[k, f]), float(my[k, f]), float(mz[k, f]))
+
+            trail_lines[k].set_data(mx[k, : f + 1], my[k, : f + 1])
+            trail_lines[k].set_3d_properties(mz[k, : f + 1])
+
+        # IMPORTANT: no fig.canvas.draw/flush here!
+        return [rf_arrow, b0_arrow] + m_arrows + trail_lines
+
+    ani = animation.FuncAnimation(
+        fig,
+        update,
+        frames=frames,
+        init_func=init,
+        interval=interval_ms,
+        blit=False,      # correct for 3D
+        repeat=False
+    )
+
+    if in_notebook:
+        # Most reliable across notebook backends:
+        if notebook_mode == "html5":
+            html = HTML(ani.to_html5_video())
+        else:
+            html = HTML(ani.to_jshtml())
+        return fig, ax, ani, html
+
+    return fig, ax, ani
 
 
 if __name__ == "__main__":
-    from bloch.bloch import bloch
-    from min_time_gradient import minimum_time_gradient
+    from . import bloch
+    from .min_time_gradient import minimum_time_gradient
 
 
     gamma_bar = 4257
@@ -175,7 +223,7 @@ if __name__ == "__main__":
     area = .99 / x / gamma_bar
     g = minimum_time_gradient(area, Gmax, Smax, dt)
 
-    B1 = np.zeros((int(np.round(sim_time/dt)),), dtype=np.complex)
+    B1 = np.zeros((int(np.round(sim_time/dt)),), dtype=complex)
     G = np.zeros((int(np.round(sim_time/dt)),))
     B1[:N] = b1
     G[N:N+len(g)] = g
@@ -185,5 +233,14 @@ if __name__ == "__main__":
 
 
 
-    visualize_magnetization(B1, G*x, mx, my, mz, accel=5)
+    fig, ax, ani = visualize_magnetization_anim(B1, G*x, mx, my, mz, accel=1, plot_sum=False, in_notebook=False, interval_ms=20)
+
+    #from matplotlib.animation import FFMpegWriter
+    #ani.save("bloch_x_0p05.gif", writer="pillow", fps=30, dpi=80)
+    #writer = FFMpegWriter(fps=30, bitrate=1200)
+    #ani.save("out.mp4", writer=writer)
+    #plt.close(fig)
+
+
+    plt.show()
 
